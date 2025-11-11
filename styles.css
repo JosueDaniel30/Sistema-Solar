@@ -1,0 +1,8 @@
+:root{ --bg:#030414; --muted:#9aa7b2; }
+body{ margin:0; font-family:Inter,system-ui,Arial; background:radial-gradient(circle at 10% 20%, #051022 0%, #02020b 50%); color:#e6f7ff }
+.layout{ display:grid; grid-template-columns:300px 1fr; gap:18px; padding:20px; max-width:1200px; margin:0 auto }
+.sidebar{ background:rgba(255,255,255,0.03); padding:12px; border-radius:10px }
+.viewer{ height:520px; border-radius:10px; overflow:hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.7); background:linear-gradient(180deg,#02101a,#061024) }
+.planet-list{ display:flex; flex-direction:column; gap:8px; margin-top:12px }
+.planet-btn{ padding:8px 10px; background:transparent; border-radius:8px; border:1px solid rgba(255,255,255,0.03); cursor:pointer }
+.info-box{ margin-top:12px; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px }
