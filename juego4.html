@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preguntas del Sistema Solar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Estrellas de fondo */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 5s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+
+        /* Contenedor principal */
+        .game-container {
+            background: rgba(12, 20, 69, 0.7);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #6ee7ff;
+            text-shadow: 0 0 10px rgba(110, 231, 255, 0.7);
+        }
+
+        /* Panel de puntuación */
+        .score-panel {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(16, 30, 86, 0.8);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .score-label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #a3b1ff;
+        }
+
+        .score-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .correct { color: #4ade80; }
+        .incorrect { color: #f87171; }
+        .timer { color: #fbbf24; }
+        .progress { color: #60a5fa; }
+
+        /* Contenedor de preguntas */
+        .question-container {
+            background: rgba(16, 30, 86, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(110, 231, 255, 0.3);
+        }
+
+        #pregunta {
+            font-size: 1.5rem;
+            color: white;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+            margin-bottom: 20px;
+        }
+
+        /* Opciones */
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .option-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .option-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .option-btn:active {
+            transform: translateY(1px);
+        }
+
+        .option-btn.correct {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+        }
+
+        .option-btn.incorrect {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+        }
+
+        .option-btn .option-letter {
+            background: rgba(255, 255, 255, 0.2);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        /* Botones */
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .menu-btn {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .ranking-btn {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Mensaje de fin de juego */
+        .victory-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 50px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: fadeIn 0.5s;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        .victory-message h2 {
+            margin: 0 0 15px 0;
+            font-size: 2em;
+        }
+
+        .victory-message p {
+            margin: 10px 0;
+            font-size: 1.2em;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 999;
+        }
+
+        /* Ranking */
+        .ranking-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(26, 26, 46, 0.8);
+            border-radius: 10px;
+            border: 2px solid #6ee7ff;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .ranking-section h3 {
+            margin: 0 0 15px 0;
+            color: #6ee7ff;
+            text-align: center;
+            font-size: 1.4em;
+        }
+
+        .ranking-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(110, 231, 255, 0.1);
+            border-radius: 5px;
+            border-left: 3px solid #6ee7ff;
+            transition: background 0.3s;
+        }
+
+        .ranking-item:hover {
+            background: rgba(110, 231, 255, 0.2);
+        }
+
+        .ranking-item.top {
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.2), rgba(110, 231, 255, 0.1));
+            border-left-color: #ffd700;
+        }
+
+        .ranking-position {
+            font-weight: bold;
+            color: #6ee7ff;
+            min-width: 30px;
+        }
+
+        .ranking-name {
+            flex: 1;
+            margin: 0 10px;
+            color: #fff;
+        }
+
+        .ranking-stats {
+            color: #ccc;
+            font-size: 0.9em;
+        }
+
+        .name-input-form {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .name-input-form input {
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 2px solid #6ee7ff;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1em;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .name-input-form input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .name-input-form button {
+            padding: 12px 25px;
+            border-radius: 50px;
+            border: none;
+            background: #6ee7ff;
+            color: #0f0c29;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .name-input-form button:hover {
+            background: #4fd1e7;
+            transform: translateY(-3px);
+        }
+
+        /* Barra de progreso */
+        .progress-container {
+            margin: 15px 0;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #6ee7ff, #4fd1e7);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .score-panel {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            #pregunta {
+                font-size: 1.3rem;
+            }
+        }
+
+        /* Animaciones */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 0.5s ease;
+        }
+
+        /* Efecto de brillo para elementos importantes */
+        .glow {
+            text-shadow: 0 0 10px currentColor;
+        }
+    </style>
+</head>
+
+<body>
+<!-- Fondo de estrellas -->
+<div class="stars" id="stars"></div>
+
+<div class="game-container">
+    <h1>🌞 Preguntas del Sistema Solar 🪐</h1>
+
+    <div class="score-panel">
+        <div class="score-item">
+            <div class="score-label">Correctas</div>
+            <div id="good" class="score-value correct">0</div>
+        </div>
+        <div class="score-item">
+            <div class="score-label">Incorrectas</div>
+            <div id="bad" class="score-value incorrect">0</div>
+        </div>
+        <div class="score-item">
+            <div class="score-label">Tiempo</div>
+            <div id="timer" class="score-value timer">00:00</div>
+        </div>
+        <div class="score-item">
+            <div class="score-label">Progreso</div>
+            <div id="progressText" class="score-value progress">0/10</div>
+        </div>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-bar">
+            <div class="progress" id="progressBar"></div>
+        </div>
+    </div>
+
+    <div class="question-container">
+        <h2 id="pregunta">Cargando pregunta...</h2>
+        <div id="opciones" class="options"></div>
+    </div>
+
+    <div class="btn-group">
+        <button class="restart-btn" onclick="reiniciarJuego()">🔄 Reiniciar Juego</button>
+        <button class="ranking-btn" onclick="mostrarRanking()">🏆 Ver Ranking</button>
+    </div>
+
+    <div class="ranking-section">
+        <h3>🏆 Ranking de Mejores Puntuaciones 🏆</h3>
+        <div class="ranking-list" id="rankingList">
+            <p style="text-align: center; color: #ccc;">Aún no hay puntuaciones registradas</p>
+        </div>
+    </div>
+
+    <a href="menu.html" class="back-btn">← Volver al Menú</a>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="victory-message" id="victoryMessage">
+    <h2>🎉 ¡Juego Completado! 🎉</h2>
+    <p>Has respondido todas las preguntas</p>
+    <p><strong>Puntuación:</strong> <span id="finalScore">0</span>/10</p>
+    <p><strong>Tiempo:</strong> <span id="finalTime">00:00</span></p>
+    <div class="name-input-form" id="nameForm">
+        <input type="text" id="playerName" placeholder="Ingresa tu nombre" maxlength="20">
+        <button onclick="guardarPuntuacion()">Guardar Puntuación</button>
+    </div>
+    <div id="nameSaved" style="display: none;">
+        <p style="color: #6ee7ff; font-weight: bold;">✓ Puntuación guardada</p>
+    </div>
+    <button class="menu-btn" onclick="cerrarVictoria()">Cerrar</button>
+</div>
+
+<script>
+    // Base de datos de preguntas expandida
+    const preguntas = [
+        { p: "¿Cuál es el planeta más grande del sistema solar?", o: ["Júpiter", "Marte", "Tierra", "Saturno"], r: "Júpiter" },
+        { p: "¿Qué planeta es conocido como el planeta rojo?", o: ["Venus", "Marte", "Saturno", "Júpiter"], r: "Marte" },
+        { p: "¿Cuál es la estrella central de nuestro sistema solar?", o: ["La Luna", "El Sol", "Sirio", "Alpha Centauri"], r: "El Sol" },
+        { p: "¿Qué planeta tiene anillos visibles desde la Tierra?", o: ["Neptuno", "Saturno", "Mercurio", "Venus"], r: "Saturno" },
+        { p: "¿Cuál es el planeta más cercano al Sol?", o: ["Mercurio", "Tierra", "Venus", "Marte"], r: "Mercurio" },
+        { p: "¿Qué planeta tiene la mayor cantidad de lunas?", o: ["Júpiter", "Urano", "Marte", "Saturno"], r: "Júpiter" },
+        { p: "¿Dónde se encuentra el cinturón de asteroides?", o: ["Entre Marte y Júpiter", "Entre Tierra y Venus", "Alrededor de Plutón", "Entre Saturno y Urano"], r: "Entre Marte y Júpiter" },
+        { p: "¿Qué planeta es famoso por su gran mancha roja?", o: ["Venus", "Júpiter", "Saturno", "Neptuno"], r: "Júpiter" },
+        { p: "¿Cuál es el planeta más frío del sistema solar?", o: ["Urano", "Mercurio", "Tierra", "Marte"], r: "Urano" },
+        { p: "¿Qué planeta rota de lado?", o: ["Júpiter", "Urano", "Neptuno", "Venus"], r: "Urano" },
+        { p: "¿Qué planeta tiene un día más largo que su año?", o: ["Venus", "Mercurio", "Marte", "Júpiter"], r: "Venus" },
+        { p: "¿Cuál es el planeta más denso del sistema solar?", o: ["Tierra", "Mercurio", "Venus", "Marte"], r: "Tierra" },
+        { p: "¿Qué planeta es conocido como 'el planeta gemelo de la Tierra'?", o: ["Venus", "Marte", "Júpiter", "Saturno"], r: "Venus" },
+        { p: "¿Qué planeta tiene los vientos más rápidos del sistema solar?", o: ["Neptuno", "Júpiter", "Saturno", "Urano"], r: "Neptuno" },
+        { p: "¿Cuál es el único planeta que gira en sentido horario?", o: ["Venus", "Urano", "Mercurio", "Marte"], r: "Venus" }
+    ];
+
+    // Variables del juego
+    let correctas = 0;
+    let incorrectas = 0;
+    let preguntasRestantes = [];
+    let preguntaActual = null;
+    let bloqueado = false;
+    let totalPreguntas = 10;
+    let preguntasRespondidas = 0;
+    let startTime = null;
+    let timerInterval = null;
+    let elapsedTime = 0;
+    let juegoTerminado = false;
+    let scoreSaved = false;
+
+    // Inicializar estrellas de fondo
+    function crearEstrellas() {
+        const starsContainer = document.getElementById("stars");
+        const starCount = 100;
+
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement("div");
+            star.classList.add("star");
+
+            // Tamaño aleatorio
+            const size = Math.random() * 3;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+
+            // Posición aleatoria
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+
+            // Retraso de animación aleatorio
+            star.style.animationDelay = `${Math.random() * 5}s`;
+
+            starsContainer.appendChild(star);
+        }
+    }
+
+    // Inicializar el juego
+    function inicializarJuego() {
+        // Reiniciar variables
+        correctas = 0;
+        incorrectas = 0;
+        preguntasRespondidas = 0;
+        juegoTerminado = false;
+        scoreSaved = false;
+        elapsedTime = 0;
+
+        // Actualizar UI
+        document.getElementById("good").innerText = correctas;
+        document.getElementById("bad").innerText = incorrectas;
+        document.getElementById("progressText").innerText = `0/${totalPreguntas}`;
+        document.getElementById("progressBar").style.width = "0%";
+        document.getElementById("timer").textContent = "00:00";
+
+        // Mezclar preguntas y seleccionar las primeras 10
+        preguntasRestantes = [...preguntas];
+        mezclarArray(preguntasRestantes);
+        preguntasRestantes = preguntasRestantes.slice(0, totalPreguntas);
+
+        // Iniciar temporizador
+        iniciarTemporizador();
+
+        // Mostrar primera pregunta
+        siguientePregunta();
+    }
+
+    // Mezclar array (algoritmo Fisher-Yates)
+    function mezclarArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    // Mostrar siguiente pregunta
+    function siguientePregunta() {
+        if (preguntasRestantes.length === 0) {
+            juegoCompletado();
+            return;
+        }
+
+        // Obtener siguiente pregunta
+        preguntaActual = preguntasRestantes.pop();
+
+        // Actualizar UI
+        document.getElementById("pregunta").innerText = preguntaActual.p;
+
+        const cont = document.getElementById("opciones");
+        cont.innerHTML = "";
+
+        // Mezclar opciones
+        const opcionesMezcladas = mezclarArray([...preguntaActual.o]);
+
+        // Crear botones de opciones
+        opcionesMezcladas.forEach((op, index) => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + index)}</span> ${op}`;
+            btn.onclick = () => validarRespuesta(op, preguntaActual.r, btn);
+            cont.appendChild(btn);
+        });
+
+        // Actualizar barra de progreso
+        actualizarProgreso();
+
+        // Desbloquear interfaz
+        bloqueado = false;
+    }
+
+    // Validar respuesta
+    function validarRespuesta(seleccion, respuesta, boton) {
+        if (bloqueado || juegoTerminado) return;
+
+        bloqueado = true;
+        preguntasRespondidas++;
+
+        // Marcar respuesta correcta e incorrecta
+        const opciones = document.querySelectorAll('.option-btn');
+        opciones.forEach(btn => {
+            if (btn.textContent.includes(respuesta)) {
+                btn.classList.add('correct');
+            }
+            if (btn === boton && seleccion !== respuesta) {
+                btn.classList.add('incorrect');
+            }
+        });
+
+        // Actualizar puntuación
+        if (seleccion === respuesta) {
+            correctas++;
+            document.getElementById("good").innerText = correctas;
+            document.querySelector(".score-item:nth-child(1)").classList.add("pulse");
+            setTimeout(() => {
+                document.querySelector(".score-item:nth-child(1)").classList.remove("pulse");
+            }, 500);
+        } else {
+            incorrectas++;
+            document.getElementById("bad").innerText = incorrectas;
+            document.querySelector(".score-item:nth-child(2)").classList.add("pulse");
+            setTimeout(() => {
+                document.querySelector(".score-item:nth-child(2)").classList.remove("pulse");
+            }, 500);
+        }
+
+        // Esperar un momento y pasar a la siguiente pregunta
+        setTimeout(() => {
+            siguientePregunta();
+        }, 1500);
+    }
+
+    // Actualizar barra de progreso
+    function actualizarProgreso() {
+        const progreso = (preguntasRespondidas / totalPreguntas) * 100;
+        document.getElementById("progressBar").style.width = `${progreso}%`;
+        document.getElementById("progressText").innerText = `${preguntasRespondidas}/${totalPreguntas}`;
+    }
+
+    // Iniciar temporizador
+    function iniciarTemporizador() {
+        startTime = Date.now();
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            if (!juegoTerminado) {
+                elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+                actualizarTiempo();
+            }
+        }, 1000);
+    }
+
+    // Actualizar tiempo en pantalla
+    function actualizarTiempo() {
+        const minutos = Math.floor(elapsedTime / 60);
+        const segundos = elapsedTime % 60;
+        const tiempoFormateado = `${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+        document.getElementById("timer").textContent = tiempoFormateado;
+    }
+
+    // Detener temporizador
+    function detenerTemporizador() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    // Juego completado
+    function juegoCompletado() {
+        juegoTerminado = true;
+        detenerTemporizador();
+
+        // Mostrar mensaje de victoria
+        document.getElementById("finalScore").textContent = correctas;
+        document.getElementById("finalTime").textContent = document.getElementById("timer").textContent;
+        document.getElementById("overlay").style.display = "block";
+        document.getElementById("victoryMessage").style.display = "block";
+
+        // Resetear formulario
+        document.getElementById("playerName").value = "";
+        document.getElementById("nameForm").style.display = "block";
+        document.getElementById("nameSaved").style.display = "none";
+        scoreSaved = false;
+
+        // Enfocar en el input de nombre
+        setTimeout(() => {
+            document.getElementById("playerName").focus();
+        }, 100);
+    }
+
+    // Guardar puntuación en el ranking
+    function guardarPuntuacion() {
+        const nombre = document.getElementById("playerName").value.trim();
+        if (!nombre) {
+            alert("Por favor, ingresa tu nombre");
+            return;
+        }
+
+        if (scoreSaved) {
+            alert("Ya has guardado esta puntuación");
+            return;
+        }
+
+        const puntuacion = {
+            nombre: nombre,
+            correctas: correctas,
+            totalPreguntas: totalPreguntas,
+            tiempo: elapsedTime,
+            tiempoFormateado: document.getElementById("timer").textContent,
+            fecha: new Date().toLocaleDateString('es-ES'),
+            porcentaje: Math.round((correctas / totalPreguntas) * 100)
+        };
+
+        // Obtener ranking actual
+        let ranking = obtenerRanking();
+        ranking.push(puntuacion);
+
+        // Ordenar por porcentaje (mayor es mejor) y luego por tiempo
+        ranking.sort((a, b) => {
+            if (a.porcentaje !== b.porcentaje) {
+                return b.porcentaje - a.porcentaje;
+            }
+            return a.tiempo - b.tiempo;
+        });
+
+        // Mantener solo los top 10
+        ranking = ranking.slice(0, 10);
+
+        // Guardar en localStorage
+        localStorage.setItem('preguntasRanking', JSON.stringify(ranking));
+
+        // Actualizar visualización
+        mostrarRanking();
+
+        // Ocultar formulario y mostrar confirmación
+        document.getElementById("nameForm").style.display = "none";
+        document.getElementById("nameSaved").style.display = "block";
+        scoreSaved = true;
+    }
+
+    // Obtener ranking del localStorage
+    function obtenerRanking() {
+        const rankingStr = localStorage.getItem('preguntasRanking');
+        return rankingStr ? JSON.parse(rankingStr) : [];
+    }
+
+    // Mostrar ranking en pantalla
+    function mostrarRanking() {
+        const ranking = obtenerRanking();
+        const rankingList = document.getElementById("rankingList");
+
+        if (ranking.length === 0) {
+            rankingList.innerHTML = '<p style="text-align: center; color: #ccc;">Aún no hay puntuaciones registradas</p>';
+            return;
+        }
+
+        rankingList.innerHTML = ranking.map((item, index) => {
+            const isTop = index === 0;
+            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+            return `
+                    <div class="ranking-item ${isTop ? 'top' : ''}">
+                        <span class="ranking-position">${medal} ${index + 1}.</span>
+                        <span class="ranking-name">${item.nombre}</span>
+                        <span class="ranking-stats">${item.correctas}/${item.totalPreguntas} | ${item.tiempoFormateado}</span>
+                    </div>
+                `;
+        }).join('');
+    }
+
+    // Cerrar mensaje de victoria
+    function cerrarVictoria() {
+        document.getElementById("overlay").style.display = "none";
+        document.getElementById("victoryMessage").style.display = "none";
+    }
+
+    // Reiniciar juego
+    function reiniciarJuego() {
+        detenerTemporizador();
+        inicializarJuego();
+    }
+
+    // Mostrar ranking
+    function mostrarRanking() {
+        // Obtener ranking del localStorage
+        const ranking = obtenerRanking();
+        const rankingList = document.getElementById("rankingList");
+
+        if (ranking.length === 0) {
+            rankingList.innerHTML = '<p style="text-align: center; color: #ccc;">Aún no hay puntuaciones registradas</p>';
+        } else {
+            rankingList.innerHTML = ranking.map((item, index) => {
+                const isTop = index === 0;
+                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                return `
+                        <div class="ranking-item ${isTop ? 'top' : ''}">
+                            <span class="ranking-position">${medal} ${index + 1}.</span>
+                            <span class="ranking-name">${item.nombre}</span>
+                            <span class="ranking-stats">${item.correctas}/${item.totalPreguntas} | ${item.tiempoFormateado}</span>
+                        </div>
+                    `;
+            }).join('');
+        }
+    }
+
+    // Cargar ranking al iniciar
+    mostrarRanking();
+    crearEstrellas();
+    inicializarJuego();
+
+    // Permitir guardar con Enter (usando delegación de eventos)
+    document.addEventListener("keypress", (e) => {
+        const nameInput = document.getElementById("playerName");
+        if (e.key === "Enter" && nameInput && document.getElementById("victoryMessage").style.display === "block") {
+            guardarPuntuacion();
+        }
+    });
+
+    // Cerrar con ESC
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            cerrarVictoria();
+        }
+    });
+</script>
+</body>
+</html>

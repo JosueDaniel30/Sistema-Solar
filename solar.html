@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/solarcss.css">
+    <title>El Sistema Solar Interactivo</title>
+</head>
+<body>
+<div class="stars-background" id="stars"></div>
+
+<h1>EL SISTEMA SOLAR</h1>
+
+<a class="volver" href="index.html">⬅ Volver al menú</a>
+
+<div class="controls">
+    <button class="control-btn" id="playPauseBtn" onclick="toggleAnimation()">⏸ Pausar</button>
+    <div class="speed-control">
+        <label>Velocidad:</label>
+        <input type="range" id="speedSlider" min="0.5" max="3" step="0.1" value="1" oninput="changeSpeed(this.value)">
+    </div>
+</div>
+
+<div class="solar-system-container">
+    <div class="solar-system" id="solarSystem">
+        <!-- Sol -->
+        <div class="sun" onclick="openModal('sun')">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg/330px-The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg" alt="Sol"/>
+        </div>
+
+        <!-- Líneas de órbita tipo arco -->
+        <div class="orbit-line orbit-line-1"></div>
+        <div class="orbit-line orbit-line-2"></div>
+        <div class="orbit-line orbit-line-3"></div>
+        <div class="orbit-line orbit-line-4"></div>
+        <div class="orbit-line orbit-line-5"></div>
+        <div class="orbit-line orbit-line-6"></div>
+        <div class="orbit-line orbit-line-7"></div>
+        <div class="orbit-line orbit-line-8"></div>
+
+
+        <!-- Mercurio -->
+        <div class="planet-wrapper mercury-wrapper" onclick="openModal('mercury')">
+            <div class="planet mercury">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Reprocessed_Mariner_10_image_of_Mercury.jpg/250px-Reprocessed_Mariner_10_image_of_Mercury.jpg" alt="Mercurio"/>
+            </div>
+            <div class="planet-label label-orange">MERCURIO</div>
+        </div>
+
+        <!-- Venus -->
+        <div class="planet-wrapper venus-wrapper" onclick="openModal('venus')">
+            <div class="planet venus">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/85/Venus_globe.jpg" alt="Venus"/>
+            </div>
+            <div class="planet-label label-orange">VENUS</div>
+        </div>
+
+        <!-- Tierra -->
+        <div class="planet-wrapper earth-wrapper" onclick="openModal('earth')">
+            <div class="planet earth">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg" alt="Tierra"/>
+            </div>
+            <div class="planet-label label-green">TIERRA</div>
+        </div>
+
+        <!-- Marte -->
+        <div class="planet-wrapper mars-wrapper" onclick="openModal('mars')">
+            <div class="planet mars">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/0/02/OSIRIS_Mars_true_color.jpg" alt="Marte"/>
+            </div>
+            <div class="planet-label label-red">MARTE</div>
+        </div>
+
+        <!-- Júpiter -->
+        <div class="planet-wrapper jupiter-wrapper" onclick="openModal('jupiter')">
+            <div class="planet jupiter planet-large">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Jupiter_in_true_color.jpg/960px-Jupiter_in_true_color.jpg" alt="Júpiter"/>
+            </div>
+            <div class="planet-label label-orange">JÚPITER</div>
+        </div>
+
+        <!-- Saturno -->
+        <div class="planet-wrapper saturn-wrapper" onclick="openModal('saturn')">
+            <div class="planet saturn planet-large">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Saturn_during_Equinox.jpg" alt="Saturno"/>
+            </div>
+            <div class="planet-label label-orange">SATURNO</div>
+        </div>
+
+        <!-- Urano -->
+        <div class="planet-wrapper uranus-wrapper" onclick="openModal('uranus')">
+            <div class="planet uranus">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/3d/Uranus2.jpg" alt="Urano"/>
+            </div>
+            <div class="planet-label label-blue">URANO</div>
+        </div>
+
+        <!-- Neptuno -->
+        <div class="planet-wrapper neptune-wrapper" onclick="openModal('neptune')">
+            <div class="planet neptune">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/56/Neptune_Full.jpg" alt="Neptuno"/>
+            </div>
+            <div class="planet-label label-blue">NEPTUNO</div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+        <div class="modal-header">
+            <img id="modal-img" src="" alt="">
+            <h2 id="modal-title"></h2>
+        </div>
+        <div class="modal-info">
+            <h3>Información</h3>
+            <p id="modal-description"></p>
+            <div class="stats-grid" id="stats-grid"></div>
+        </div>
+        <div class="verse-section">
+            <h3>Versículo Bíblico</h3>
+            <p class="verse" id="modal-verse"></p>
+            <p class="verse-reference" id="modal-reference"></p>
+        </div>
+        <div class="planet-nav">
+            <button class="nav-btn" id="prevPlanet" onclick="navigatePlanet(-1)">← Anterior</button>
+            <button class="nav-btn" id="nextPlanet" onclick="navigatePlanet(1)">Siguiente →</button>
+        </div>
+    </div>
+</div>
+
+<div class="copyright">© Editorial Etecé</div>
+
+<script>
+    // Crear estrellas de fondo
+    function createStars() {
+        const starsContainer = document.getElementById('stars');
+        const numStars = 300;
+
+        for (let i = 0; i < numStars; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 2 + 1;
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            star.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            starsContainer.appendChild(star);
+        }
+    }
+
+    createStars();
+
+    // Datos mejorados de los planetas y el sol
+    const celestialData = {
+        sun: {
+            name: 'Sol',
+            img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg/330px-The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg',
+            description: 'El Sol es la estrella central de nuestro sistema solar. Es una esfera casi perfecta de plasma caliente, calentada hasta la incandescencia por reacciones de fusión nuclear en su núcleo. El Sol emite energía principalmente como luz visible, ultravioleta e infrarroja, proporcionando la energía necesaria para la vida en la Tierra.',
+            stats: {
+                'Temperatura': '5,778 K (superficie)',
+                'Distancia': '0 UA (centro)',
+                'Diámetro': '1,392,700 km',
+                'Tipo': 'Estrella G2V',
+                'Masa': '1.989 × 10³⁰ kg',
+                'Edad': '4.6 mil millones de años'
+            },
+            verse: 'Dios hizo… la luz mayor para gobernar el día.',
+            reference: 'Génesis 1:16b'
+        },
+        mercury: {
+            name: 'Mercurio',
+            img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Reprocessed_Mariner_10_image_of_Mercury.jpg/250px-Reprocessed_Mariner_10_image_of_Mercury.jpg',
+            description: 'Mercurio es el planeta más cercano al Sol y el más pequeño del sistema solar. Tiene una superficie rocosa cubierta de cráteres, similar a la Luna. Su día es muy largo (58.6 días terrestres) y su temperatura varía extremadamente entre el día (430°C) y la noche (-180°C).',
+            stats: {
+                'Distancia al Sol': '57.9 millones km',
+                'Temperatura': '-173°C a 427°C',
+                'Diámetro': '4,879 km',
+                'Período orbital': '88 días',
+                'Gravedad': '3.7 m/s²',
+                'Lunas': '0'
+            },
+            verse: 'Los cielos cuentan la gloria de Dios, y el firmamento anuncia la obra de sus manos.',
+            reference: 'Salmos 19:1'
+        },
+        venus: {
+            name: 'Venus',
+            img: 'https://upload.wikimedia.org/wikipedia/commons/8/85/Venus_globe.jpg',
+            description: 'Venus es el segundo planeta desde el Sol y el más caliente del sistema solar, con una temperatura superficial de aproximadamente 465°C. Está cubierto por una densa atmósfera de dióxido de carbono que crea un efecto invernadero extremo. A menudo se le llama el "planeta gemelo" de la Tierra debido a su tamaño similar.',
+            stats: {
+                'Distancia al Sol': '108.2 millones km',
+                'Temperatura': '462°C',
+                'Diámetro': '12,104 km',
+                'Período orbital': '225 días',
+                'Gravedad': '8.87 m/s²',
+                'Lunas': '0'
+            },
+            verse: 'Levanten los ojos y miren a los cielos: ¿Quién creó todo esto?',
+            reference: 'Isaías 40:26'
+        },
+        earth: {
+            name: 'Tierra',
+            img: 'https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg',
+            description: 'La Tierra es el tercer planeta desde el Sol y el único lugar conocido en el universo donde existe vida. Tiene agua líquida, una atmósfera rica en oxígeno y un campo magnético que protege la vida de la radiación solar. Es el hogar de millones de especies, incluyendo los humanos.',
+            stats: {
+                'Distancia al Sol': '149.6 millones km',
+                'Temperatura': '-88°C a 58°C',
+                'Diámetro': '12,756 km',
+                'Período orbital': '365.25 días',
+                'Gravedad': '9.8 m/s²',
+                'Lunas': '1 (Luna)'
+            },
+            verse: 'En el principio Dios creó los cielos y la tierra.',
+            reference: 'Génesis 1:1'
+        },
+        mars: {
+            name: 'Marte',
+            img: 'https://upload.wikimedia.org/wikipedia/commons/0/02/OSIRIS_Mars_true_color.jpg',
+            description: 'Marte, conocido como el "Planeta Rojo", es el cuarto planeta desde el Sol. Su color rojizo se debe al óxido de hierro en su superficie. Tiene el volcán más grande del sistema solar (Olympus Mons) y evidencia de que alguna vez tuvo agua líquida en su superficie.',
+            stats: {
+                'Distancia al Sol': '227.9 millones km',
+                'Temperatura': '-87°C a -5°C',
+                'Diámetro': '6,792 km',
+                'Período orbital': '687 días',
+                'Gravedad': '3.71 m/s²',
+                'Lunas': '2 (Fobos, Deimos)'
+            },
+            verse: 'Cuando miro los cielos, obra de tus dedos, la luna y las estrellas que tú formaste...',
+            reference: 'Salmos 8:3'
+        },
+        jupiter: {
+            name: 'Júpiter',
+            img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Jupiter_in_true_color.jpg/960px-Jupiter_in_true_color.jpg',
+            description: 'Júpiter es el planeta más grande del sistema solar, un gigante gaseoso compuesto principalmente de hidrógeno y helio. Tiene una Gran Mancha Roja, una tormenta más grande que la Tierra que ha durado cientos de años. Júpiter tiene más de 80 lunas conocidas, incluyendo las cuatro grandes lunas galileanas.',
+            stats: {
+                'Distancia al Sol': '778.5 millones km',
+                'Temperatura': '-108°C',
+                'Diámetro': '142,984 km',
+                'Lunas conocidas': '95+',
+                'Gravedad': '24.79 m/s²',
+                'Período orbital': '11.9 años'
+            },
+            verse: '¡Oh Señor Dios! Tú hiciste los cielos y la tierra con tu gran poder...',
+            reference: 'Jeremías 32:17'
+        },
+        saturn: {
+            name: 'Saturno',
+            img: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Saturn_during_Equinox.jpg',
+            description: 'Saturno es famoso por sus espectaculares anillos, compuestos principalmente de partículas de hielo y roca. Es el segundo planeta más grande del sistema solar y, como Júpiter, es un gigante gaseoso. Saturno tiene más de 80 lunas, siendo Titán la más grande y la única luna del sistema solar con una atmósfera densa.',
+            stats: {
+                'Distancia al Sol': '1,432 millones km',
+                'Temperatura': '-138°C',
+                'Diámetro': '120,536 km',
+                'Lunas conocidas': '146',
+                'Gravedad': '10.44 m/s²',
+                'Período orbital': '29.5 años'
+            },
+            verse: '¡Cuán numerosas son tus obras, oh Señor! Con sabiduría las hiciste todas.',
+            reference: 'Salmos 104:24'
+        },
+        uranus: {
+            name: 'Urano',
+            img: 'https://upload.wikimedia.org/wikipedia/commons/3/3d/Uranus2.jpg',
+            description: 'Urano es el séptimo planeta desde el Sol y un gigante de hielo. Es único porque rota de lado, con su eje de rotación inclinado casi 98 grados. Su atmósfera contiene metano, que le da su color azul-verde característico. Urano tiene un sistema de anillos tenues y más de 27 lunas conocidas.',
+            stats: {
+                'Distancia al Sol': '2,867 millones km',
+                'Temperatura': '-197°C',
+                'Diámetro': '51,118 km',
+                'Período orbital': '84 años',
+                'Gravedad': '8.69 m/s²',
+                'Lunas': '27'
+            },
+            verse: 'Porque toda casa es hecha por alguien, pero el que hizo todas las cosas es Dios.',
+            reference: 'Hebreos 3:4'
+        },
+        neptune: {
+            name: 'Neptuno',
+            img: 'https://upload.wikimedia.org/wikipedia/commons/5/56/Neptune_Full.jpg',
+            description: 'Neptuno es el planeta más alejado del Sol y otro gigante de hielo. Es conocido por sus vientos extremadamente fuertes, que pueden alcanzar velocidades de hasta 2,100 km/h. Su color azul intenso se debe al metano en su atmósfera. Neptuno tiene 14 lunas conocidas, siendo Tritón la más grande.',
+            stats: {
+                'Distancia al Sol': '4,515 millones km',
+                'Temperatura': '-201°C',
+                'Diámetro': '49,528 km',
+                'Vientos máximos': '2,100 km/h',
+                'Gravedad': '11.15 m/s²',
+                'Lunas': '14'
+            },
+            verse: 'Él extiende el norte sobre vacío, cuelga la tierra sobre nada.',
+            reference: 'Job 26:7'
+        }
+    };
+
+    let isPaused = false;
+    let currentSpeed = 1;
+    let currentPlanet = '';
+    const planetOrder = ['sun', 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
+
+    function openModal(celestialBody) {
+        const data = celestialData[celestialBody];
+        if (!data) return;
+
+        document.getElementById('modal-img').src = data.img;
+        document.getElementById('modal-title').textContent = data.name;
+        document.getElementById('modal-description').textContent = data.description;
+        document.getElementById('modal-verse').textContent = data.verse;
+        document.getElementById('modal-reference').textContent = data.reference;
+
+        // Agregar estadísticas
+        const statsGrid = document.getElementById('stats-grid');
+        statsGrid.innerHTML = '';
+        for (const [key, value] of Object.entries(data.stats)) {
+            const statItem = document.createElement('div');
+            statItem.className = 'stat-item';
+            statItem.innerHTML = `
+                    <div class="stat-label">${key}</div>
+                    <div class="stat-value">${value}</div>
+                `;
+            statsGrid.appendChild(statItem);
+        }
+
+        currentPlanet = celestialBody;
+        updateNavigationButtons();
+
+        document.getElementById('modal').classList.add('active');
+    }
+
+    function updateNavigationButtons() {
+        if (!currentPlanet) return;
+
+        const currentIndex = planetOrder.indexOf(currentPlanet);
+        const prevBtn = document.getElementById('prevPlanet');
+        const nextBtn = document.getElementById('nextPlanet');
+
+        if (prevBtn && nextBtn) {
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex === planetOrder.length - 1;
+        }
+    }
+
+    function navigatePlanet(direction) {
+        const currentIndex = planetOrder.indexOf(currentPlanet);
+        const newIndex = currentIndex + direction;
+
+        if (newIndex >= 0 && newIndex < planetOrder.length) {
+            openModal(planetOrder[newIndex]);
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('active');
+    }
+
+    function toggleAnimation() {
+        const solarSystem = document.getElementById('solarSystem');
+        const btn = document.getElementById('playPauseBtn');
+
+        isPaused = !isPaused;
+        if (isPaused) {
+            solarSystem.classList.add('paused');
+            btn.textContent = '▶ Reproducir';
+        } else {
+            solarSystem.classList.remove('paused');
+            btn.textContent = '⏸ Pausar';
+        }
+    }
+
+    function changeSpeed(value) {
+        currentSpeed = parseFloat(value);
+
+        // Actualizar solo la rotación de planetas y sol
+        const planetImages = document.querySelectorAll('.planet img');
+        planetImages.forEach(img => {
+            img.style.animationDuration = `${10/currentSpeed}s`;
+        });
+
+        // Actualizar animación del sol
+        const sun = document.querySelector('.sun');
+        if (sun) {
+            sun.style.animationDuration = `${3/currentSpeed}s, ${20/currentSpeed}s`;
+        }
+    }
+
+    // Cerrar modal al hacer clic fuera del contenido
+    document.getElementById('modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+
+    // Cerrar modal con la tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+
+        // Navegación con teclado
+        if (document.getElementById('modal').classList.contains('active')) {
+            if (e.key === 'ArrowLeft') {
+                navigatePlanet(-1);
+            } else if (e.key === 'ArrowRight') {
+                navigatePlanet(1);
+            }
+        }
+    });
+</script>
+</body>
+</html>

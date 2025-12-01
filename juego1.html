@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mímicas Espaciales</title>
+    <style>
+        /* Estilos generales */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Estrellas de fondo */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 5s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+
+        /* Contenedor principal */
+        .game-container {
+            background: rgba(12, 20, 69, 0.7);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #6ee7ff;
+            text-shadow: 0 0 10px rgba(110, 231, 255, 0.7);
+        }
+
+        /* Panel de puntuación */
+        .score-panel {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(16, 30, 86, 0.8);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .score-label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #a3b1ff;
+        }
+
+        .score-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .correct { color: #4ade80; }
+        .incorrect { color: #f87171; }
+        .total { color: #60a5fa; }
+
+        /* Temporizador */
+        .timer-container {
+            margin: 20px 0;
+        }
+
+        .timer {
+            font-size: 1.2rem;
+            color: #fbbf24;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            width: 100%;
+            transition: width 1s linear;
+        }
+
+        /* Mímica actual */
+        .mimica-container {
+            background: rgba(16, 30, 86, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(110, 231, 255, 0.3);
+        }
+
+        #mimicaTexto {
+            font-size: 1.8rem;
+            color: white;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Botones */
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .menu-btn {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+        }
+
+        .btn-good {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-bad {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .ranking-btn {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Efectos de animación */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 0.5s ease;
+        }
+
+        /* Modales */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1e1b4b, #312e81);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #6ee7ff;
+        }
+
+        .modal form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .modal input {
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .modal button {
+            margin-top: 10px;
+        }
+
+        #listaRanking {
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ranking-nombre {
+            text-align: left;
+        }
+
+        .ranking-puntaje {
+            text-align: right;
+            font-weight: bold;
+            color: #6ee7ff;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .score-panel {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            #mimicaTexto {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<!-- Fondo de estrellas -->
+<div class="stars" id="stars"></div>
+
+<div class="game-container">
+    <h1>🚀 Mímicas Espaciales 👽</h1>
+
+    <div class="score-panel">
+        <div class="score-item">
+            <div class="score-label">Correctos</div>
+            <div id="correctos" class="score-value correct">0</div>
+        </div>
+        <div class="score-item">
+            <div class="score-label">Incorrectos</div>
+            <div id="incorrectos" class="score-value incorrect">0</div>
+        </div>
+        <div class="score-item">
+            <div class="score-label">Puntaje Total</div>
+            <div id="total" class="score-value total">0</div>
+        </div>
+    </div>
+
+    <div class="timer-container">
+        <div class="timer">Tiempo: <span id="tiempo">60</span>s</div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+
+    <div class="mimica-container">
+        <h2 id="mimicaTexto">Cargando mímica...</h2>
+    </div>
+
+    <div class="btn-group">
+        <button class="menu-btn" onclick="nuevaMimica()">🔄 Nueva Mímica</button>
+        <button class="btn-good" onclick="respuestaCorrecta()">✅ Correcto</button>
+        <button class="btn-bad" onclick="respuestaIncorrecta()">❌ Incorrecto</button>
+        <button class="ranking-btn" onclick="mostrarRanking()">🏆 Ranking</button>
+    </div>
+
+    <a href="menu.html" class="back-btn">← Volver al Menú</a>
+</div>
+
+<!-- Modal para ingresar nombre al final del juego -->
+<div id="modalFinJuego" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h2>¡Tiempo agotado!</h2>
+        <p>Tu puntuación: <span id="puntuacionFinal"></span></p>
+        <form id="formPuntaje">
+            <label for="nombreJugador">Ingresa tu nombre:</label>
+            <input type="text" id="nombreJugador" required maxlength="15">
+            <button type="submit">Guardar en Ranking</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para mostrar el ranking -->
+<div id="modalRanking" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h2>🏆 Ranking de Mímicas Espaciales</h2>
+        <div id="listaRanking"></div>
+        <button onclick="cerrarModalRanking()">Cerrar</button>
+    </div>
+</div>
+
+<script>
+    // Base de datos de mímicas espaciales expandida
+    const mímicas = [
+        "Imita a un alien saludando",
+        "Actúa como si flotaras sin gravedad",
+        "Simula manejar una nave espacial",
+        "Imita un robot espacial defectuoso",
+        "Haz como que esquivas meteoritos",
+        "Comunícate como un astronauta con radio mala",
+        "Finge que descubres un planeta nuevo",
+        "Imita a un cohete despegando",
+        "Representa un extraterrestre comiendo comida terrestre por primera vez",
+        "Simula caminar en la Luna con baja gravedad",
+        "Imita a un satélite girando alrededor de la Tierra",
+        "Actúa como un astronauta reparando su traje en el espacio",
+        "Representa un agujero negro absorbiendo objetos cercanos",
+        "Simula el aterrizaje de emergencia en un planeta desconocido",
+        "Imita a un marciano bailando música terrestre",
+        "Actúa como si estuvieras en una caminata espacial",
+        "Representa el despegue de un cohete en cámara lenta",
+        "Simula la comunicación con una inteligencia extraterrestre",
+        "Imita a un astronauta comiendo en el espacio",
+        "Representa la vida en una estación espacial",
+        "Simula la recolección de muestras en Marte",
+        "Imita un OVNI volando en forma de zigzag",
+        "Representa la falta de oxígeno en el espacio",
+        "Simula la instalación de paneles solares en una nave",
+        "Imita un robot explorador de planetas"
+    ];
+
+    // Variables del juego
+    let correctos = 0;
+    let incorrectos = 0;
+    let tiempoRestante = 60;
+    let temporizador;
+    let mímicasUsadas = [];
+
+    // Elementos DOM
+    const mimicaTexto = document.getElementById("mimicaTexto");
+    const tiempoElemento = document.getElementById("tiempo");
+    const progressBar = document.getElementById("progress");
+    const modalFinJuego = document.getElementById("modalFinJuego");
+    const modalRanking = document.getElementById("modalRanking");
+    const formPuntaje = document.getElementById("formPuntaje");
+    const puntuacionFinal = document.getElementById("puntuacionFinal");
+    const listaRanking = document.getElementById("listaRanking");
+
+    // Inicializar el juego
+    function iniciarJuego() {
+        // Crear estrellas de fondo
+        crearEstrellas();
+
+        // Iniciar temporizador
+        iniciarTemporizador();
+
+        // Mostrar primera mímica
+        nuevaMimica();
+
+        // Configurar el formulario para guardar puntaje
+        formPuntaje.addEventListener('submit', guardarPuntaje);
+    }
+
+    // Crear estrellas animadas en el fondo
+    function crearEstrellas() {
+        const starsContainer = document.getElementById("stars");
+        const starCount = 100;
+
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement("div");
+            star.classList.add("star");
+
+            // Tamaño aleatorio
+            const size = Math.random() * 3;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+
+            // Posición aleatoria
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+
+            // Retraso de animación aleatorio
+            star.style.animationDelay = `${Math.random() * 5}s`;
+
+            starsContainer.appendChild(star);
+        }
+    }
+
+    // Iniciar temporizador del juego
+    function iniciarTemporizador() {
+        tiempoRestante = 60;
+        actualizarTemporizador();
+
+        temporizador = setInterval(() => {
+            tiempoRestante--;
+            actualizarTemporizador();
+
+            if (tiempoRestante <= 0) {
+                clearInterval(temporizador);
+                finDelJuego();
+            }
+        }, 1000);
+    }
+
+    // Actualizar visualización del temporizador
+    function actualizarTemporizador() {
+        tiempoElemento.textContent = tiempoRestante;
+        progressBar.style.width = `${(tiempoRestante / 60) * 100}%`;
+
+        // Cambiar color según el tiempo restante
+        if (tiempoRestante <= 10) {
+            progressBar.style.background = "linear-gradient(90deg, #ef4444, #dc2626)";
+        } else if (tiempoRestante <= 30) {
+            progressBar.style.background = "linear-gradient(90deg, #f59e0b, #d97706)";
+        }
+    }
+
+    // Generar una nueva mímica
+    function nuevaMimica() {
+        // Reiniciar el temporizador si se acabó el tiempo
+        if (tiempoRestante <= 0) {
+            reiniciarJuego();
+            return;
+        }
+
+        // Si ya usamos todas las mímicas, reiniciamos la lista
+        if (mímicasUsadas.length === mímicas.length) {
+            mímicasUsadas = [];
+        }
+
+        // Seleccionar una mímica no usada recientemente
+        let mímica;
+        do {
+            mímica = mímicas[Math.floor(Math.random() * mímicas.length)];
+        } while (mímicasUsadas.includes(mímica) && mímicasUsadas.length < mímicas.length);
+
+        // Agregar a usadas y mantener solo las últimas 5
+        mímicasUsadas.push(mímica);
+        if (mímicasUsadas.length > 5) {
+            mímicasUsadas.shift();
+        }
+
+        // Mostrar la mímica con efecto
+        mimicaTexto.textContent = mímica;
+        mimicaTexto.parentElement.classList.add("pulse");
+
+        // Remover la clase de animación después de que termine
+        setTimeout(() => {
+            mimicaTexto.parentElement.classList.remove("pulse");
+        }, 500);
+    }
+
+    // Manejar respuesta correcta
+    function respuestaCorrecta() {
+        correctos++;
+        actualizarPuntaje();
+
+        // Efecto visual de acierto
+        document.querySelector(".score-item:nth-child(1)").classList.add("pulse");
+        setTimeout(() => {
+            document.querySelector(".score-item:nth-child(1)").classList.remove("pulse");
+        }, 500);
+
+        nuevaMimica();
+    }
+
+    // Manejar respuesta incorrecta
+    function respuestaIncorrecta() {
+        incorrectos++;
+        actualizarPuntaje();
+
+        // Efecto visual de error
+        document.querySelector(".score-item:nth-child(2)").classList.add("pulse");
+        setTimeout(() => {
+            document.querySelector(".score-item:nth-child(2)").classList.remove("pulse");
+        }, 500);
+
+        nuevaMimica();
+    }
+
+    // Actualizar la puntuación en pantalla
+    function actualizarPuntaje() {
+        document.getElementById("correctos").textContent = correctos;
+        document.getElementById("incorrectos").textContent = incorrectos;
+        document.getElementById("total").textContent = correctos - incorrectos;
+    }
+
+    // Finalizar el juego
+    function finDelJuego() {
+        mimicaTexto.textContent = "¡Tiempo agotado!";
+
+        // Mostrar resultado final
+        setTimeout(() => {
+            const puntuacion = correctos - incorrectos;
+            puntuacionFinal.textContent = puntuacion;
+
+            // Mostrar modal para ingresar nombre
+            modalFinJuego.style.display = 'flex';
+        }, 1500);
+    }
+
+    // Guardar puntaje en el ranking
+    function guardarPuntaje(e) {
+        e.preventDefault();
+
+        const nombre = document.getElementById('nombreJugador').value.trim();
+        const puntuacion = correctos - incorrectos;
+
+        if (nombre) {
+            // Obtener ranking actual del localStorage
+            let ranking = JSON.parse(localStorage.getItem('rankingMimicasEspaciales')) || [];
+
+            // Agregar nuevo puntaje
+            ranking.push({ nombre, puntuacion });
+
+            // Ordenar por puntuación (descendente)
+            ranking.sort((a, b) => b.puntuacion - a.puntuacion);
+
+            // Mantener solo los top 10
+            ranking = ranking.slice(0, 10);
+
+            // Guardar en localStorage
+            localStorage.setItem('rankingMimicasEspaciales', JSON.stringify(ranking));
+
+            // Cerrar modal y mostrar ranking
+            modalFinJuego.style.display = 'none';
+            mostrarRanking();
+        }
+    }
+
+    // Mostrar el ranking
+    function mostrarRanking() {
+        // Obtener ranking del localStorage
+        const ranking = JSON.parse(localStorage.getItem('rankingMimicasEspaciales')) || [];
+
+        // Limpiar lista
+        listaRanking.innerHTML = '';
+
+        if (ranking.length === 0) {
+            listaRanking.innerHTML = '<p>No hay puntuaciones aún. ¡Sé el primero!</p>';
+        } else {
+            // Crear elementos para cada puntuación
+            ranking.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'ranking-item';
+
+                // Destacar las primeras tres posiciones
+                let emoji = '';
+                if (index === 0) emoji = '🥇';
+                else if (index === 1) emoji = '🥈';
+                else if (index === 2) emoji = '🥉';
+
+                div.innerHTML = `
+                        <span class="ranking-nombre">${emoji} ${index + 1}. ${item.nombre}</span>
+                        <span class="ranking-puntaje">${item.puntuacion} pts</span>
+                    `;
+                listaRanking.appendChild(div);
+            });
+        }
+
+        // Mostrar modal
+        modalRanking.style.display = 'flex';
+    }
+
+    // Cerrar modal del ranking
+    function cerrarModalRanking() {
+        modalRanking.style.display = 'none';
+    }
+
+    // Reiniciar el juego
+    function reiniciarJuego() {
+        correctos = 0;
+        incorrectos = 0;
+        actualizarPuntaje();
+
+        // Restaurar botones originales
+        const btnGroup = document.querySelector(".btn-group");
+        btnGroup.innerHTML = `
+                <button class="menu-btn" onclick="nuevaMimica()">🔄 Nueva Mímica</button>
+                <button class="btn-good" onclick="respuestaCorrecta()">✅ Correcto</button>
+                <button class="btn-bad" onclick="respuestaIncorrecta()">❌ Incorrecto</button>
+                <button class="ranking-btn" onclick="mostrarRanking()">🏆 Ranking</button>
+            `;
+
+        // Reiniciar temporizador
+        clearInterval(temporizador);
+        iniciarTemporizador();
+
+        // Nueva mímica
+        nuevaMimica();
+    }
+
+    // Iniciar el juego cuando se carga la página
+    window.onload = iniciarJuego;
+</script>
+</body>
+</html>

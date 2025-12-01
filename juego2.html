@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Rompecabezas Espacial</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white; min-height: 100vh; padding: 20px;
+            display:flex; justify-content:center; align-items:center; overflow-x:hidden;
+        }
+
+        /* Contenedor general */
+        .game-container {
+            background: rgba(12,20,69,0.7); border-radius:20px; padding:30px;
+            max-width:900px; width:100%; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.5);
+            border:1px solid rgba(255,255,255,0.1); position:relative; z-index:1;
+        }
+
+        h1 { font-size:2.2rem; margin-bottom:18px; color:#6ee7ff; text-shadow:0 0 10px rgba(110,231,255,0.7); }
+
+        /* Canvas */
+        .canvas-container { position:relative; display:inline-block; }
+        #puzzleCanvas { border:3px solid #6ee7ff; border-radius:10px; cursor:grab; background:#1a1a2e; }
+        #puzzleCanvas:active { cursor:grabbing; }
+
+        /* Puntuaciones y botones */
+        .score-panel { display:flex; justify-content:space-around; background:rgba(16,30,86,0.8); border-radius:15px; padding:15px; margin:20px 0; }
+        .score-item { display:flex; flex-direction:column; align-items:center; }
+        .score-label { font-size:0.9rem; margin-bottom:5px; color:#a3b1ff; }
+        .score-value { font-size:1.6rem; font-weight:bold; color:white; }
+        .moves { color:#4ade80; } .timer { color:#fbbf24; } .status { color:#60a5fa; }
+
+        .btn-group { display:flex; justify-content:center; gap:15px; margin:20px 0; flex-wrap:wrap; }
+        button { padding:10px 20px; border-radius:50px; border:none; font-weight:bold; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,0.2); }
+        .menu-btn { background:linear-gradient(135deg,#6366f1,#4f46e5); color:white; }
+        .hint-btn { background:linear-gradient(135deg,#8b5cf6,#7c3aed); color:white; }
+        .reset-btn { background:linear-gradient(135deg,#f59e0b,#d97706); color:white; }
+
+        /* Image options */
+        .image-options { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:10px; }
+        .image-option { width:120px; height:80px; border-radius:10px; overflow:hidden; border:3px solid transparent; cursor:pointer; transition:all 0.18s; }
+        .image-option img { width:100%; height:100%; object-fit:cover; display:block; }
+        .image-option.selected { border-color:#6ee7ff; box-shadow:0 6px 18px rgba(110,231,255,0.25); transform:translateY(-4px); }
+
+        /* Ranking */
+        .ranking-section { margin:20px 0; padding:18px; background:rgba(26,26,46,0.8); border-radius:10px; border:2px solid #6ee7ff; max-width:500px; width:100%; }
+        .ranking-item { display:flex; justify-content:space-between; padding:8px; margin:6px 0; background:rgba(110,231,255,0.06); border-radius:6px; border-left:3px solid #6ee7ff; }
+        .ranking-item.top { border-left-color:#ffd700; background:linear-gradient(90deg, rgba(255,215,0,0.08), rgba(110,231,255,0.04)); }
+
+        /* Victory modal */
+        .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:999; }
+        .victory-message { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:30px 40px; border-radius:15px; z-index:1000; max-width:460px; width:90%; text-align:center; }
+
+        /* selection visuals (canvas draws most, but keep pulse animation for subtle UI) */
+        .pulse { animation:pulse 0.28s ease; }
+        @keyframes pulse { 0% { transform:scale(1); } 50% { transform:scale(1.04); } 100% { transform:scale(1); } }
+
+        /* small responsive tweaks */
+        @media (max-width: 760px) {
+            .score-value { font-size:1.2rem; }
+            .image-option { width:140px; height:90px; }
+            #puzzleCanvas { width:320px; height:320px; }
+        }
+
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <h1>🧩 Rompecabezas Espacial 🌌</h1>
+
+    <div class="puzzle-controls">
+        <div class="image-selector">
+            <h3 style="color:#6ee7ff; margin-bottom:8px;">🌟 Selecciona una imagen espacial</h3>
+            <div class="image-options" id="imageOptions">
+                <div class="image-option" data-url="https://img.pikbest.com/video/20240903/outer-space-with-planets-2d-animation-cartoon_10786408.jpg!w700wp">
+                    <img src="https://img.pikbest.com/video/20240903/outer-space-with-planets-2d-animation-cartoon_10786408.jpg!w700wp" alt="Galaxia">
+                </div>
+                <div class="image-option" data-url="https://wallpapers.com/images/hd/animated-space-0ghh7kjo9rie1ppz.jpg">
+                    <img src="https://wallpapers.com/images/hd/animated-space-0ghh7kjo9rie1ppz.jpg" alt="Nebulosa">
+                </div>
+                <div class="image-option" data-url="https://static.vecteezy.com/system/resources/previews/021/615/981/non_2x/cartoon-astronaut-in-outer-space-rocket-spaceship-vector.jpg">
+                    <img src="https://static.vecteezy.com/system/resources/previews/021/615/981/non_2x/cartoon-astronaut-in-outer-space-rocket-spaceship-vector.jpg" alt="Planetas">
+                </div>
+                <div class="image-option" data-url="https://wallpapers.com/images/hd/animated-space-1920-x-1080-background-sg3vt18qnup4w0x2.jpg">
+                    <img src="https://wallpapers.com/images/hd/animated-space-1920-x-1080-background-sg3vt18qnup4w0x2.jpg" alt="Astronauta">
+                </div>
+            </div>
+
+            <div style="margin:10px 0;">
+            <div style="margin:10px 0;">
+                <input type="file" id="imgLoader" accept="image/*">
+            </div>
+        </div>
+
+        <div style="margin:10px 0;">
+            <label for="puzzleSize" style="color:#6ee7ff; font-weight:bold; margin-right:8px;">Tamaño:</label>
+            <select id="puzzleSize" style="padding:8px 10px; border-radius:8px; border:2px solid #6ee7ff; background:rgba(255,255,255,0.06); color:white;">
+                <option value="2">2x2 (Fácil)</option>
+                <option value="3" selected>3x3 (Medio)</option>
+                <option value="4">4x4 (Difícil)</option>
+                <option value="5">5x5 (Experto)</option>
+            </select>
+        </div>
+
+        <div style="margin:12px 0;">
+            <button class="menu-btn" id="createBtn">Crear Rompecabezas</button>
+        </div>
+    </div>
+
+    <div class="game-panel">
+        <div class="canvas-container">
+            <canvas id="puzzleCanvas" width="400" height="400"></canvas>
+        </div>
+
+        <div class="score-panel" style="margin-top:18px;">
+            <div class="score-item">
+                <div class="score-label">Movimientos</div>
+                <div id="moves" class="score-value moves">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Tiempo</div>
+                <div id="timer" class="score-value timer">00:00</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Estado</div>
+                <div id="status" class="score-value status">Esperando imagen...</div>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="hint-btn" id="hintBtn">🔍 Mostrar pista</button>
+            <button class="reset-btn" id="resetBtn">🔄 Reiniciar</button>
+        </div>
+    </div>
+
+    <div class="ranking-section">
+        <h3 style="color:#6ee7ff; margin-bottom:10px;">🏆 Ranking de Mejores Puntuaciones</h3>
+        <div id="rankingList" class="ranking-list">
+            <p style="text-align:center; color:#ccc;">Aún no hay puntuaciones registradas</p>
+        </div>
+    </div>
+
+    <a href="menu.html" class="back-btn" style="display:inline-block; margin-top:10px; padding:8px 16px; background:rgba(255,255,255,0.06); color:white; text-decoration:none; border-radius:50px; border:1px solid rgba(255,255,255,0.12);">← Volver al Menú</a>
+</div>
+
+<div id="overlay" class="overlay"></div>
+<div id="victoryMessage" class="victory-message">
+    <h2>🎉 ¡Felicidades! 🎉</h2>
+    <p>Has completado el rompecabezas</p>
+    <p><strong>Movimientos:</strong> <span id="finalMoves">0</span></p>
+    <p><strong>Tiempo:</strong> <span id="finalTime">00:00</span></p>
+    <div id="nameForm" style="margin-top:12px;">
+        <input id="playerName" placeholder="Ingresa tu nombre" maxlength="20" style="padding:10px 12px; border-radius:8px; border:2px solid #6ee7ff; width:80%; max-width:260px; background:rgba(255,255,255,0.06); color:white;">
+        <div style="margin-top:8px;">
+            <button class="menu-btn" id="saveScoreBtn">Guardar Puntuación</button>
+        </div>
+    </div>
+    <div id="nameSaved" style="display:none; margin-top:8px; color:#6ee7ff; font-weight:bold;">✓ Puntuación guardada</div>
+    <div style="margin-top:12px;">
+        <button class="menu-btn" id="closeVictoryBtn">Cerrar</button>
+    </div>
+</div>
+
+<script>
+    /* ============================
+       VARIABLES Y ESTRUCTURA
+       ============================ */
+
+    const canvas = document.getElementById('puzzleCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let img = new Image();
+    let size = 3;                      // NxN
+    let pieces = [];                   // array de piezas (datos inmutables por pieza)
+    let board = [];                    // board[pos] = pieceIndex -> representa qué pieza ocupa cada casilla
+    let moves = 0;
+    let elapsedTime = 0;
+    let startTime = 0;
+    let timerInterval = null;
+    let puzzleSolved = false;
+    let imageLoaded = false;
+    let hintUsed = false;
+    let scoreSaved = false;
+
+    // Drag & drop / animación
+    let dragging = false;
+    let dragPieceIndex = null;         // índice en pieces de la pieza que arrastramos
+    let dragOriginPos = null;          // posición en el tablero donde estaba antes de arrastrar
+    let dragOffsetX = 0, dragOffsetY = 0;
+    let animatingSwap = false;
+
+    // Tamaño del canvas en píxeles (fijo para simplicidad)
+    const CANVAS_SIZE = 400;
+    canvas.width = CANVAS_SIZE;
+    canvas.height = CANVAS_SIZE;
+
+    /* ============================
+       SELECTORES DOM
+       ============================ */
+    const movesEl = document.getElementById('moves');
+    const timerEl = document.getElementById('timer');
+    const statusEl = document.getElementById('status');
+    const imageOptions = document.querySelectorAll('.image-option');
+    const imgLoader = document.getElementById('imgLoader');
+    const puzzleSizeSel = document.getElementById('puzzleSize');
+    const createBtn = document.getElementById('createBtn');
+    const hintBtn = document.getElementById('hintBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const rankingListEl = document.getElementById('rankingList');
+    const overlay = document.getElementById('overlay');
+    const victoryMessage = document.getElementById('victoryMessage');
+    const finalMovesEl = document.getElementById('finalMoves');
+    const finalTimeEl = document.getElementById('finalTime');
+    const playerNameInput = document.getElementById('playerName');
+    const saveScoreBtn = document.getElementById('saveScoreBtn');
+    const nameSavedEl = document.getElementById('nameSaved');
+    const closeVictoryBtn = document.getElementById('closeVictoryBtn');
+
+    /* ============================
+       IMÁGENES PREDEFINIDAS
+       ============================ */
+    const predefinedImages = [
+        "https://img.pikbest.com/video/20240903/outer-space-with-planets-2d-animation-cartoon_10786408.jpg!w700wp",
+        "https://wallpapers.com/images/hd/animated-space-0ghh7kjo9rie1ppz.jpg",
+        "https://static.vecteezy.com/system/resources/previews/021/615/981/non_2x/cartoon-astronaut-in-outer-space-rocket-spaceship-vector.jpg",
+        "https://fondosanimados.com/wp-content/uploads/2025/11/espacio-1.webp"
+    ];
+
+    // marcar primera imagen como seleccionada visualmente
+    imageOptions.forEach((opt, idx) => {
+        opt.addEventListener('click', () => {
+            imageOptions.forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            loadImage(opt.dataset.url);
+        });
+    });
+
+    // cargar default (la primera)
+    if (imageOptions[0]) {
+        imageOptions[0].classList.add('selected');
+        loadImage(imageOptions[0].dataset.url);
+    }
+
+    // cargar archivo local
+    imgLoader.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            alert('Selecciona un archivo de imagen válido.');
+            return;
+        }
+        const url = URL.createObjectURL(file);
+        imageOptions.forEach(o => o.classList.remove('selected'));
+        loadImage(url);
+    });
+
+    puzzleSizeSel.addEventListener('change', (e) => {
+        size = parseInt(e.target.value, 10) || 3;
+        if (imageLoaded) createPuzzle();
+    });
+
+    createBtn.addEventListener('click', () => {
+        if (!imageLoaded) {
+            alert('Carga o selecciona una imagen primero.');
+            return;
+        }
+        createPuzzle();
+    });
+
+    hintBtn.addEventListener('click', () => {
+        if (!imageLoaded || puzzleSolved) return;
+        hintUsed = true;
+        // mostrar temporalmente toda la imagen debajo con baja opacidad
+        showTemporaryHint();
+    });
+
+    resetBtn.addEventListener('click', () => {
+        if (!imageLoaded) return;
+        createPuzzle(); // remezcla y reinicia
+    });
+
+    saveScoreBtn.addEventListener('click', guardarPuntuacion);
+    closeVictoryBtn.addEventListener('click', cerrarVictoria);
+
+    // atajos teclado
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            cerrarVictoria();
+        }
+    });
+
+    /* ============================
+       FUNCIONES DE IMAGEN Y CREACIÓN
+       ============================ */
+
+    function loadImage(url) {
+        statusEl.textContent = 'Cargando imagen...';
+        const errorMsg = document.getElementById('errorMsg');
+        if (errorMsg) errorMsg.style.display = 'none';
+
+        img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            imageLoaded = true;
+            statusEl.textContent = 'Imagen cargada. Haz clic en "Crear Rompecabezas"';
+            // iniciar automáticamente el rompecabezas
+            createPuzzle();
+        };
+        img.onerror = () => {
+            imageLoaded = false;
+            statusEl.textContent = 'Error al cargar la imagen';
+            alert('Error al cargar la imagen. Prueba otra.');
+        };
+        img.src = url;
+    }
+
+    function createPuzzle() {
+        // reset de estado
+        moves = 0;
+        elapsedTime = 0;
+        puzzleSolved = false;
+        hintUsed = false;
+        scoreSaved = false;
+        dragPieceIndex = null;
+        dragging = false;
+        animatingSwap = false;
+        startTime = Date.now();
+
+        // UI
+        movesEl.textContent = '0';
+        timerEl.textContent = '00:00';
+        statusEl.textContent = '¡Juega!';
+        overlay.style.display = 'none';
+        victoryMessage.style.display = 'none';
+        nameSavedEl.style.display = 'none';
+
+        size = parseInt(puzzleSizeSel.value, 10) || 3;
+
+        // Crear piezas (cada pieza tiene su ubicación correcta)
+        const total = size * size;
+        pieces = [];
+        for (let i = 0; i < total; i++) {
+            const correctX = i % size;
+            const correctY = Math.floor(i / size);
+            pieces.push({
+                index: i,
+                correctX, correctY
+            });
+        }
+
+        // Crear board: mezclamos posiciones y asignamos pieceIndex a cada casilla
+        board = [];
+        const positions = Array.from({length: total}, (_, i) => i);
+        // Fisher-Yates shuffle
+        for (let i = positions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [positions[i], positions[j]] = [positions[j], positions[i]];
+        }
+        // positions[pos] = pieceIndex
+        for (let pos = 0; pos < total; pos++) {
+            board[pos] = positions[pos];
+        }
+
+        // iniciar cronómetro
+        iniciarCronometro();
+
+        // dibujar
+        draw();
+        mostrarRanking();
+    }
+
+    /* ============================
+       CRONÓMETRO
+       ============================ */
+
+    function iniciarCronometro() {
+        detenerCronometro();
+        startTime = Date.now();
+        timerInterval = setInterval(() => {
+            if (!puzzleSolved) {
+                elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+                actualizarTiempo();
+            }
+        }, 250);
+    }
+
+    function detenerCronometro() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    function actualizarTiempo() {
+        const m = Math.floor(elapsedTime / 60);
+        const s = elapsedTime % 60;
+        timerEl.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    /* ============================
+       DIBUJADO (varias variantes)
+       ============================ */
+
+    function draw() {
+        ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+        const w = CANVAS_SIZE / size;
+        const h = CANVAS_SIZE / size;
+
+        // Si imagen es mayor o menor, usaremos drawImage con src positions calculadas
+        for (let pos = 0; pos < board.length; pos++) {
+            const pieceIndex = board[pos];
+            if (pieceIndex == null) continue; // casilla vacía (temporary)
+            const piece = pieces[pieceIndex];
+
+            const dx = (pos % size) * w;
+            const dy = Math.floor(pos / size) * h;
+
+            // atenuar si hay selección activa (solo visual)
+            if (dragging && dragPieceIndex !== null && dragOriginPos !== null) {
+                // si la casilla está siendo arrastrada, la saltamos (dibujamos más abajo)
+                if (pos === dragOriginPos) {
+                    continue;
+                } else {
+                    ctx.globalAlpha = 0.55;
+                }
+            } else {
+                ctx.globalAlpha = 1;
+            }
+
+            ctx.drawImage(
+                img,
+                piece.correctX * (img.width / size),
+                piece.correctY * (img.height / size),
+                img.width / size,
+                img.height / size,
+                dx,
+                dy,
+                w, h
+            );
+
+            // líneas de separación
+            ctx.globalAlpha = 1;
+            ctx.strokeStyle = "#2a2a3e";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(dx, dy, w, h);
+        }
+
+        // si estamos arrastrando, dibujar la pieza flotante arriba
+        if (dragging && dragPieceIndex !== null) {
+            const p = pieces[dragPieceIndex];
+            const w = CANVAS_SIZE / size;
+            const h = CANVAS_SIZE / size;
+
+            ctx.globalAlpha = 0.95;
+            const tx = p.tempX ?? ( (dragOriginPos % size) * w );
+            const ty = p.tempY ?? ( Math.floor(dragOriginPos / size) * h );
+
+            ctx.drawImage(
+                img,
+                p.correctX * (img.width / size),
+                p.correctY * (img.height / size),
+                img.width / size,
+                img.height / size,
+                tx, ty, w, h
+            );
+
+            // borde alrededor de la pieza arrastrada
+            ctx.globalAlpha = 1;
+            ctx.strokeStyle = "#6ee7ff";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(tx, ty, w, h);
+        }
+    }
+
+    /* Dibuja durante animación de swap (usa tempX/tempY en piezas involucradas) */
+    function drawDuringAnimation(animatedPositions = {}) {
+        ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+        const w = CANVAS_SIZE / size;
+        const h = CANVAS_SIZE / size;
+
+        for (let pos = 0; pos < board.length; pos++) {
+            let pieceIndex = board[pos];
+            let drawX = (pos % size) * w;
+            let drawY = Math.floor(pos / size) * h;
+            // si en animatedPositions hay una pieza que debe dibujarse en temp lugar, la ajustamos
+            if (animatedPositions[pos]) {
+                const ap = animatedPositions[pos];
+                drawX = ap.x;
+                drawY = ap.y;
+            }
+
+            if (pieceIndex == null) continue;
+            const piece = pieces[pieceIndex];
+
+            ctx.drawImage(
+                img,
+                piece.correctX * (img.width / size),
+                piece.correctY * (img.height / size),
+                img.width / size,
+                img.height / size,
+                drawX, drawY, w, h
+            );
+
+            ctx.strokeStyle = "#2a2a3e";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(drawX, drawY, w, h);
+        }
+    }
+
+    /* ============================
+       UTILIDADES: coordenadas y detección
+       ============================ */
+
+    function posFromCoords(x, y) {
+        const w = CANVAS_SIZE / size;
+        const h = CANVAS_SIZE / size;
+        const col = Math.floor(x / w);
+        const row = Math.floor(y / h);
+        if (col < 0 || col >= size || row < 0 || row >= size) return -1;
+        return row * size + col;
+    }
+
+    function pieceIndexAtPos(pos) {
+        if (pos < 0 || pos >= board.length) return null;
+        return board[pos];
+    }
+
+    /* ============================
+       EVENTOS: DRAG & DROP (mouse y touch)
+       ============================ */
+
+    canvas.addEventListener('mousedown', onPointerDown);
+    canvas.addEventListener('mousemove', onPointerMove);
+    canvas.addEventListener('mouseup', onPointerUp);
+    canvas.addEventListener('mouseleave', onPointerUp);
+
+    // touch support
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); onPointerDown(e.touches[0]); });
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); onPointerMove(e.touches[0]); });
+    canvas.addEventListener('touchend', (e) => { e.preventDefault(); onPointerUp(e.changedTouches ? e.changedTouches[0] : e); });
+
+    function onPointerDown(e) {
+        if (!imageLoaded || puzzleSolved || animatingSwap) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const pos = posFromCoords(x, y);
+        if (pos < 0) return;
+        const pieceIdx = pieceIndexAtPos(pos);
+        if (pieceIdx == null) return;
+
+        // comenzar arrastre
+        dragging = true;
+        dragPieceIndex = pieceIdx;
+        dragOriginPos = pos;
+        const w = CANVAS_SIZE / size;
+        const h = CANVAS_SIZE / size;
+        // offset para dibujar según donde agarró el usuario
+        dragOffsetX = x - (pos % size) * w;
+        dragOffsetY = y - Math.floor(pos / size) * h;
+
+        // preparar temp coords en pieza para dibujar
+        const tx = x - dragOffsetX;
+        const ty = y - dragOffsetY;
+        pieces[dragPieceIndex].tempX = tx;
+        pieces[dragPieceIndex].tempY = ty;
+
+        // temporalmente "vaciar" la casilla para que parezca que la pieza flota
+        board[dragOriginPos] = null;
+
+        draw();
+    }
+
+    function onPointerMove(e) {
+        if (!dragging || dragPieceIndex == null) return;
+        if (!imageLoaded) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const w = CANVAS_SIZE / size;
+        const h = CANVAS_SIZE / size;
+
+        const tx = x - dragOffsetX;
+        const ty = y - dragOffsetY;
+        pieces[dragPieceIndex].tempX = tx;
+        pieces[dragPieceIndex].tempY = ty;
+
+        draw();
+    }
+
+    function onPointerUp(e) {
+        if (!dragging || dragPieceIndex == null) return;
+        if (!imageLoaded) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const targetPos = posFromCoords(x, y);
+
+        // si soltó fuera del canvas o en la misma casilla -> devolver la pieza a su lugar sin swap
+        if (targetPos < 0 || targetPos === dragOriginPos) {
+            // devolver
+            board[dragOriginPos] = dragPieceIndex;
+            delete pieces[dragPieceIndex].tempX;
+            delete pieces[dragPieceIndex].tempY;
+            dragging = false;
+            dragPieceIndex = null;
+            dragOriginPos = null;
+            draw();
+            return;
+        }
+
+        // si la casilla objetivo está ocupada -> animar intercambio entre origin y target
+        if (board[targetPos] != null) {
+            // animar swap entre dragOriginPos y targetPos
+            animarIntercambioPositions(dragOriginPos, targetPos, dragPieceIndex);
+        } else {
+            // casilla vacía (pieza simplemente se mueve a la casilla vacía)
+            board[targetPos] = dragPieceIndex;
+            delete pieces[dragPieceIndex].tempX;
+            delete pieces[dragPieceIndex].tempY;
+            dragging = false;
+            dragPieceIndex = null;
+            dragOriginPos = null;
+            moves++;
+            movesEl.textContent = String(moves);
+            draw();
+            if (checkVictory()) mostrarVictoria();
+        }
+    }
+
+    /* ============================
+       ANIMACIÓN DE INTERCAMBIO
+       ============================ */
+
+    function animarIntercambioPositions(pos1, pos2, draggingPieceIdx = null) {
+        if (animatingSwap) return;
+        animatingSwap = true;
+
+        // pieza A en pos1 (si arrastrada, draggingPieceIdx); pieza B en pos2
+        const idxA = draggingPieceIdx !== null ? draggingPieceIdx : board[pos1];
+        const idxB = board[pos2];
+
+        const w = CANVAS_SIZE / size;
+        const h = CANVAS_SIZE / size;
+        const startA = { x: (pos1 % size) * w, y: Math.floor(pos1 / size) * h };
+        const startB = { x: (pos2 % size) * w, y: Math.floor(pos2 / size) * h };
+        const endA = { x: startB.x, y: startB.y };
+        const endB = { x: startA.x, y: startA.y };
+
+        const startTimeAnim = performance.now();
+        const duration = 240; // ms
+
+        function easeInOut(t) {
+            // smoothstep-like
+            return t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t;
+        }
+
+        function frame(now) {
+            const t = Math.min((now - startTimeAnim) / duration, 1);
+            const ease = easeInOut(t);
+
+            // asignar posiciones temporales para dibujar
+            pieces[idxA].tempX = startA.x + (endA.x - startA.x) * ease;
+            pieces[idxA].tempY = startA.y + (endA.y - startA.y) * ease;
+            pieces[idxB].tempX = startB.x + (endB.x - startB.x) * ease;
+            pieces[idxB].tempY = startB.y + (endB.y - startB.y) * ease;
+
+            // durante animación, dejamos board con null en las casillas animadas y dibujamos con drawDuringAnimation
+            const animatedPositions = {};
+            animatedPositions[pos1] = { x: pieces[idxA].tempX, y: pieces[idxA].tempY };
+            animatedPositions[pos2] = { x: pieces[idxB].tempX, y: pieces[idxB].tempY };
+
+            // Para dibujar las otras piezas (que no están animadas), construimos un temporary board:
+            const tempBoard = board.slice();
+            tempBoard[pos1] = null;
+            tempBoard[pos2] = null;
+            // temporalmente añadir piezas que no están en those pos
+            const realBoardBackup = board;
+            board = tempBoard;
+            drawDuringAnimation(animatedPositions);
+            board = realBoardBackup;
+
+            if (t < 1) {
+                requestAnimationFrame(frame);
+            } else {
+                // limpiar temps
+                delete pieces[idxA].tempX; delete pieces[idxA].tempY;
+                delete pieces[idxB].tempX; delete pieces[idxB].tempY;
+                // realizar swap en board: pos1 <- idxB, pos2 <- idxA (si idxA era arrastrada)
+                board[pos1] = idxB;
+                board[pos2] = idxA;
+
+                animatingSwap = false;
+                dragging = false;
+                dragPieceIndex = null;
+                dragOriginPos = null;
+
+                moves++;
+                movesEl.textContent = String(moves);
+
+                draw();
+
+                if (checkVictory()) mostrarVictoria();
+            }
+        }
+
+        requestAnimationFrame(frame);
+    }
+
+    /* ============================
+       VICTORIA, RANKING Y GUARDADO
+       ============================ */
+
+    function checkVictory() {
+        for (let pos = 0; pos < board.length; pos++) {
+            const pieceIndex = board[pos];
+            if (pieceIndex == null) return false;
+            const piece = pieces[pieceIndex];
+            // la condición de victoria es que la pieza que está en pos tenga correctX/Y que coincida con pos
+            const correctPos = piece.correctY * size + piece.correctX;
+            if (correctPos !== pos) return false;
+        }
+        puzzleSolved = true;
+        return true;
+    }
+
+    function mostrarVictoria() {
+        detenerCronometro();
+        puzzleSolved = true;
+        finalMovesEl.textContent = String(moves);
+        finalTimeEl.textContent = timerEl.textContent;
+        overlay.style.display = 'block';
+        victoryMessage.style.display = 'block';
+        statusEl.textContent = '¡Rompecabezas completado!';
+        playerNameInput.value = '';
+        nameSavedEl.style.display = 'none';
+        scoreSaved = false;
+        // enfocar input para guardar
+        setTimeout(() => playerNameInput.focus(), 120);
+    }
+
+    function cerrarVictoria() {
+        overlay.style.display = 'none';
+        victoryMessage.style.display = 'none';
+    }
+
+    function guardarPuntuacion() {
+        const nombre = playerNameInput.value.trim() || 'Anónimo';
+        if (scoreSaved) {
+            alert('Ya guardaste esta puntuación.');
+            return;
+        }
+
+        const puntuacion = {
+            nombre,
+            movimientos: moves,
+            tiempoSeg: elapsedTime,
+            tiempoFormateado: timerEl.textContent,
+            fecha: new Date().toLocaleDateString('es-ES'),
+            tamaño: size,
+            pistaUsada: hintUsed
+        };
+
+        let ranking = obtenerRanking();
+        ranking.push(puntuacion);
+
+        ranking.sort((a, b) => {
+            if (a.movimientos !== b.movimientos) return a.movimientos - b.movimientos;
+            return a.tiempoSeg - b.tiempoSeg;
+        });
+
+        ranking = ranking.slice(0, 10);
+        localStorage.setItem('puzzleRanking', JSON.stringify(ranking));
+        mostrarRanking();
+        nameSavedEl.style.display = 'block';
+        scoreSaved = true;
+    }
+
+    function obtenerRanking() {
+        const s = localStorage.getItem('puzzleRanking');
+        return s ? JSON.parse(s) : [];
+    }
+
+    function mostrarRanking() {
+        const ranking = obtenerRanking();
+        if (!ranking || ranking.length === 0) {
+            rankingListEl.innerHTML = '<p style="text-align:center; color:#ccc;">Aún no hay puntuaciones registradas</p>';
+            return;
+        }
+        rankingListEl.innerHTML = ranking.map((it, idx) => {
+            const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx+1}.`;
+            const hintIndicator = it.pistaUsada ? ' (con pista)' : '';
+            const topClass = idx === 0 ? 'ranking-item top' : 'ranking-item';
+            return `<div class="${topClass}"><div style="font-weight:bold; color:#6ee7ff;">${medal}</div><div style="flex:1; margin:0 10px; color:#fff;">${it.nombre}</div><div style="color:#ccc; white-space:nowrap;">${it.movimientos} mov | ${it.tiempoFormateado}${hintIndicator}</div></div>`;
+        }).join('');
+    }
+
+    /* ============================
+       PISTA (mostrar imagen completa temporalmente)
+       ============================ */
+
+    function showTemporaryHint() {
+        // vamos a dibujar toda la imagen con baja opacidad durante X ms encima del canvas
+        const w = CANVAS_SIZE / size;
+        const h = CANVAS_SIZE / size;
+
+        // snapshot: dibujar imagen completa semitransparente
+        ctx.save();
+        ctx.globalAlpha = 0.95;
+        ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
+        ctx.globalAlpha = 0.2;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+        ctx.restore();
+
+        // volver al estado del rompecabezas luego de 2.2s
+        setTimeout(() => {
+            draw();
+        }, 2200);
+    }
+
+    /* ============================
+       INIT / AUTO START
+       ============================ */
+
+    // iniciar ranking en UI
+    mostrarRanking();
+
+    // crear estrellas de fondo pequeño efecto (no crítico)
+    (function crearEstrellas(){
+        const container = document.body;
+        const starCount = 40;
+        for (let i=0;i<starCount;i++){
+            const s = document.createElement('div');
+            s.style.position = 'fixed';
+            s.style.left = `${Math.random()*100}%`;
+            s.style.top = `${Math.random()*100}%`;
+            const sizeStar = Math.random()*3 + 1;
+            s.style.width = `${sizeStar}px`;
+            s.style.height = `${sizeStar}px`;
+            s.style.borderRadius = '50%';
+            s.style.background = 'rgba(255,255,255,0.8)';
+            s.style.opacity = (Math.random()*0.6+0.1).toString();
+            s.style.zIndex = '-1';
+            container.appendChild(s);
+        }
+    })();
+
+    // on load: if imageLoaded was true from earlier, create puzzle (handled in loadImage.onload)
+    // pero si ya hay imagen cargada, createPuzzle ya se llamó
+
+    /* ============================
+       Versión alternativa de click (por si prefieres click en lugar de drag)
+       ============================ */
+    // Soporte: también permitir intercambio por clic (seleccionar + seleccionar)
+    let firstSelectedPos = null;
+    canvas.addEventListener('click', (e) => {
+        if (!imageLoaded || animatingSwap || dragging) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const pos = posFromCoords(x,y);
+        if (pos < 0) return;
+        // si la casilla es vacía, nada
+        if (board[pos] == null) return;
+        if (firstSelectedPos === null) {
+            firstSelectedPos = pos;
+            // pequeño efecto: dibujar borde temporal en esa casilla
+            draw();
+            highlightPosBorder(pos);
+        } else if (firstSelectedPos === pos) {
+            firstSelectedPos = null;
+            draw();
+        } else {
+            // intercambio mediante animación entre firstSelectedPos y pos
+            animarIntercambioPositions(firstSelectedPos, pos);
+            firstSelectedPos = null;
+        }
+    });
+
+    function highlightPosBorder(pos) {
+        const w = CANVAS_SIZE / size;
+        const h = CANVAS_SIZE / size;
+        const dx = (pos % size) * w;
+        const dy = Math.floor(pos / size) * h;
+        ctx.strokeStyle = '#6ee7ff';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(dx, dy, w, h);
+    }
+
+    /* ============================
+       Helpers: mostrar ranking al iniciar
+       ============================ */
+    // ya hay mostrarRanking() arriba
+
+    /* ============================
+       Fin del script
+       ============================ */
+</script>
+</body>
+</html>

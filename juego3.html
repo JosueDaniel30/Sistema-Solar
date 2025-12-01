@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memoria Espacial</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Estrellas de fondo */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 5s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+
+        /* Contenedor principal */
+        .game-container {
+            background: rgba(12, 20, 69, 0.7);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #6ee7ff;
+            text-shadow: 0 0 10px rgba(110, 231, 255, 0.7);
+        }
+
+        /* Panel de información */
+        .info-panel {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(16, 30, 86, 0.8);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #a3b1ff;
+        }
+
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .time { color: #fbbf24; }
+        .score { color: #4ade80; }
+        .best { color: #60a5fa; }
+        .moves { color: #c084fc; }
+
+        /* Barra de progreso */
+        .progress-container {
+            margin: 15px 0;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #6ee7ff, #4fd1e7);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* Tablero de juego */
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 25px auto;
+            max-width: 500px;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .card-inner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            transform: rotateY(180deg);
+            box-shadow: 0 0 15px rgba(110, 231, 255, 0.5);
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #1e1b4b, #312e81);
+            color: #6ee7ff;
+            border: 2px solid #6ee7ff;
+        }
+
+        .card.matched .card-front {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.7);
+        }
+
+        .card:hover:not(.flipped):not(.matched) .card-back {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(110, 231, 255, 0.5);
+        }
+
+        /* Panel de control */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        /* Mensajes del juego */
+        #game-message {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            min-height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .success {
+            color: #4ade80;
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.7);
+        }
+
+        .warning {
+            color: #fbbf24;
+        }
+
+        .error {
+            color: #f87171;
+        }
+
+        /* Ranking */
+        .ranking-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(26, 26, 46, 0.8);
+            border-radius: 10px;
+            border: 2px solid #6ee7ff;
+        }
+
+        .ranking-section h3 {
+            margin: 0 0 15px 0;
+            color: #6ee7ff;
+            text-align: center;
+            font-size: 1.4em;
+        }
+
+        .ranking-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(110, 231, 255, 0.1);
+            border-radius: 5px;
+            border-left: 3px solid #6ee7ff;
+        }
+
+        .ranking-position {
+            font-weight: bold;
+            color: #6ee7ff;
+            min-width: 30px;
+        }
+
+        .ranking-name {
+            flex: 1;
+            margin: 0 10px;
+            color: #fff;
+        }
+
+        .ranking-score {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        /* Modal para nombre */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1e1b4b, #312e81);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 2px solid #6ee7ff;
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #6ee7ff;
+        }
+
+        .name-input {
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 2px solid #6ee7ff;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1em;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .name-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .info-panel {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            #game-board {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+
+            .card-front, .card-back {
+                font-size: 2rem;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+        }
+
+        /* Animaciones */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 0.5s ease;
+        }
+
+        @keyframes celebration {
+            0% { transform: translateY(0px); }
+            25% { transform: translateY(-10px); }
+            50% { transform: translateY(0px); }
+            75% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .celebration {
+            animation: celebration 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+<!-- Fondo de estrellas -->
+<div class="stars" id="stars"></div>
+
+<div class="game-container">
+    <h1>🪐 Memoria Espacial 🌌</h1>
+
+    <div class="info-panel">
+        <div class="info-item">
+            <div class="info-label">⏳ Tiempo</div>
+            <div id="time" class="info-value time">60</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">⭐ Puntos</div>
+            <div id="score" class="info-value score">0</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">🏆 Mejor</div>
+            <div id="best-score" class="info-value best">0</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">🔄 Movimientos</div>
+            <div id="moves" class="info-value moves">0</div>
+        </div>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+
+    <div id="game-board"></div>
+
+    <div id="game-message" class="success">¡Encuentra todas las parejas espaciales!</div>
+
+    <div class="controls">
+        <button class="start-btn" onclick="iniciarJuego()">🚀 Iniciar Juego</button>
+        <button class="restart-btn" onclick="reiniciarJuego()">🔄 Reiniciar</button>
+    </div>
+
+    <div class="ranking-section">
+        <h3>🏆 Ranking de Mejores Puntuaciones 🏆</h3>
+        <div class="ranking-list" id="ranking-list">
+            <p style="text-align: center; color: #ccc;">Aún no hay puntuaciones registradas</p>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="name-modal">
+    <div class="modal-content">
+        <h2>🎉 ¡Felicidades! 🎉</h2>
+        <p>Has completado el juego con <span id="final-score">0</span> puntos</p>
+        <input type="text" class="name-input" id="player-name" placeholder="Ingresa tu nombre" maxlength="20">
+        <button class="start-btn" onclick="guardarPuntuacion()">Guardar Puntuación</button>
+    </div>
+</div>
+
+<script>
+    // Elementos del DOM
+    const gameBoard = document.getElementById("game-board");
+    const scoreText = document.getElementById("score");
+    const timeText = document.getElementById("time");
+    const bestScoreText = document.getElementById("best-score");
+    const movesText = document.getElementById("moves");
+    const gameMessage = document.getElementById("game-message");
+    const progressBar = document.getElementById("progress");
+    const rankingList = document.getElementById("ranking-list");
+    const nameModal = document.getElementById("name-modal");
+    const finalScore = document.getElementById("final-score");
+    const playerNameInput = document.getElementById("player-name");
+
+    // Variables del juego
+    let score = 0;
+    let moves = 0;
+    let timeLeft = 60;
+    let timer;
+    let gameActive = false;
+    let allowClick = true;
+    let firstCard = null;
+    let matchedPairs = 0;
+    let totalPairs = 0;
+
+    // Iconos espaciales para las cartas
+    const icons = ["🪐", "🚀", "👽", "🌙", "⭐", "🛸", "☄️", "🛰️", "🌌", "🔭", "👨‍🚀", "💫"];
+
+    // Crear estrellas de fondo
+    function crearEstrellas() {
+        const starsContainer = document.getElementById("stars");
+        const starCount = 100;
+
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement("div");
+            star.classList.add("star");
+
+            // Tamaño aleatorio
+            const size = Math.random() * 3;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+
+            // Posición aleatoria
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+
+            // Retraso de animación aleatorio
+            star.style.animationDelay = `${Math.random() * 5}s`;
+
+            starsContainer.appendChild(star);
+        }
+    }
+
+    // Inicializar el juego
+    function inicializarJuego() {
+        // Reiniciar variables
+        gameBoard.innerHTML = '';
+        score = 0;
+        moves = 0;
+        matchedPairs = 0;
+        timeLeft = 60;
+        gameActive = true;
+        allowClick = true;
+        firstCard = null;
+
+        // Actualizar UI
+        scoreText.textContent = score;
+        movesText.textContent = moves;
+        timeText.textContent = timeLeft;
+        progressBar.style.width = '0%';
+        gameMessage.textContent = "¡Encuentra todas las parejas espaciales!";
+        gameMessage.className = "success";
+
+        // Crear mazo de cartas
+        let deck = [];
+        const selectedIcons = [...icons].sort(() => Math.random() - 0.5).slice(0, 6);
+        deck = [...selectedIcons, ...selectedIcons];
+        totalPairs = selectedIcons.length;
+
+        // Mezclar cartas
+        deck.sort(() => Math.random() - 0.5);
+
+        // Crear tablero
+        deck.forEach(icon => {
+            const card = document.createElement("div");
+            card.classList.add("card");
+            card.dataset.icon = icon;
+
+            const cardInner = document.createElement("div");
+            cardInner.classList.add("card-inner");
+
+            const cardFront = document.createElement("div");
+            cardFront.classList.add("card-front");
+            cardFront.textContent = icon;
+
+            const cardBack = document.createElement("div");
+            cardBack.classList.add("card-back");
+            cardBack.textContent = "🌌";
+
+            cardInner.appendChild(cardFront);
+            cardInner.appendChild(cardBack);
+            card.appendChild(cardInner);
+            gameBoard.appendChild(card);
+
+            card.addEventListener("click", () => flipCard(card));
+        });
+
+        // Iniciar temporizador
+        clearInterval(timer);
+        timer = setInterval(updateTimer, 1000);
+
+        // Cargar mejores puntuaciones
+        cargarRanking();
+    }
+
+    // Voltear carta
+    function flipCard(card) {
+        if (!gameActive || !allowClick || card.classList.contains("flipped") || card.classList.contains("matched")) {
+            return;
+        }
+
+        card.classList.add("flipped");
+
+        if (!firstCard) {
+            firstCard = card;
+            return;
+        }
+
+        // Segundo click - verificar si hay coincidencia
+        allowClick = false;
+        moves++;
+        movesText.textContent = moves;
+
+        if (firstCard.dataset.icon === card.dataset.icon) {
+            // Coincidencia encontrada
+            setTimeout(() => {
+                firstCard.classList.add("matched");
+                card.classList.add("matched");
+
+                score += 10;
+                scoreText.textContent = score;
+                scoreText.classList.add("pulse");
+                setTimeout(() => scoreText.classList.remove("pulse"), 500);
+
+                matchedPairs++;
+                const progress = (matchedPairs / totalPairs) * 100;
+                progressBar.style.width = `${progress}%`;
+
+                resetTurn();
+
+                // Verificar si el juego ha terminado
+                if (matchedPairs === totalPairs) {
+                    juegoCompletado();
+                }
+            }, 500);
+        } else {
+            // No hay coincidencia
+            setTimeout(() => {
+                firstCard.classList.remove("flipped");
+                card.classList.remove("flipped");
+                resetTurn();
+            }, 1000);
+        }
+    }
+
+    // Reiniciar turno
+    function resetTurn() {
+        firstCard = null;
+        allowClick = true;
+    }
+
+    // Actualizar temporizador
+    function updateTimer() {
+        if (!gameActive) return;
+
+        timeLeft--;
+        timeText.textContent = timeLeft;
+
+        if (timeLeft <= 10) {
+            timeText.classList.add("error");
+            gameMessage.textContent = `¡Apresúrate! Te quedan ${timeLeft} segundos`;
+            gameMessage.className = "error";
+        }
+
+        if (timeLeft <= 0) {
+            gameOver();
+        }
+    }
+
+    // Juego completado
+    function juegoCompletado() {
+        gameActive = false;
+        clearInterval(timer);
+
+        // Bonus por tiempo restante
+        const timeBonus = Math.floor(timeLeft * 0.5);
+        score += timeBonus;
+        scoreText.textContent = score;
+
+        gameMessage.textContent = `¡Felicidades! Completaste el juego con ${score} puntos`;
+        gameMessage.className = "success celebration";
+
+        // Mostrar modal para guardar puntuación
+        setTimeout(() => {
+            finalScore.textContent = score;
+            nameModal.style.display = "flex";
+            playerNameInput.focus();
+        }, 1000);
+    }
+
+    // Game over
+    function gameOver() {
+        gameActive = false;
+        clearInterval(timer);
+
+        gameMessage.textContent = "⏰ ¡Tiempo agotado!";
+        gameMessage.className = "error";
+
+        // Desvoltear todas las cartas
+        document.querySelectorAll('.card').forEach(card => {
+            if (!card.classList.contains("matched")) {
+                card.classList.remove("flipped");
+            }
+        });
+    }
+
+    // Guardar puntuación
+    function guardarPuntuacion() {
+        const playerName = playerNameInput.value.trim();
+        if (!playerName) {
+            alert("Por favor, ingresa tu nombre");
+            return;
+        }
+
+        // Obtener ranking actual
+        let ranking = JSON.parse(localStorage.getItem("memoryRanking")) || [];
+
+        // Agregar nueva puntuación
+        ranking.push({
+            name: playerName,
+            score: score,
+            date: new Date().toLocaleDateString('es-ES')
+        });
+
+        // Ordenar por puntuación (descendente)
+        ranking.sort((a, b) => b.score - a.score);
+
+        // Mantener solo las top 10
+        ranking = ranking.slice(0, 10);
+
+        // Guardar en localStorage
+        localStorage.setItem("memoryRanking", JSON.stringify(ranking));
+
+        // Actualizar mejor puntuación
+        const bestScore = Math.max(...ranking.map(item => item.score), 0);
+        bestScoreText.textContent = bestScore;
+
+        // Cerrar modal y actualizar ranking
+        nameModal.style.display = "none";
+        cargarRanking();
+    }
+
+    // Cargar ranking
+    function cargarRanking() {
+        const ranking = JSON.parse(localStorage.getItem("memoryRanking")) || [];
+
+        if (ranking.length === 0) {
+            rankingList.innerHTML = '<p style="text-align: center; color: #ccc;">Aún no hay puntuaciones registradas</p>';
+            return;
+        }
+
+        rankingList.innerHTML = ranking.map((item, index) => {
+            const isTop = index === 0;
+            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+            return `
+                    <div class="ranking-item ${isTop ? 'pulse' : ''}">
+                        <span class="ranking-position">${medal} ${index + 1}.</span>
+                        <span class="ranking-name">${item.name}</span>
+                        <span class="ranking-score">${item.score} pts</span>
+                    </div>
+                `;
+        }).join('');
+    }
+
+    // Reiniciar juego
+    function reiniciarJuego() {
+        clearInterval(timer);
+        inicializarJuego();
+    }
+
+    // Iniciar juego automáticamente al cargar la página
+    function iniciarJuego() {
+        reiniciarJuego();
+    }
+
+    // Cargar ranking al iniciar
+    window.onload = () => {
+        crearEstrellas();
+        cargarRanking();
+        // No iniciar el juego automáticamente, esperar a que el usuario haga clic
+    };
+
+    // Permitir guardar con Enter
+    playerNameInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            guardarPuntuacion();
+        }
+    });
+</script>
+</body>
+</html>

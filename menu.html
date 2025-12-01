@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cabina de Nave Espacial</title>
+    <title>Panel de Control - Nave Espacial</title>
     <style>
         * {
             margin: 0;
@@ -48,10 +48,10 @@
 
         .window {
             position: absolute;
-            top: 15%;
+            top: 10%;
             left: 10%;
             width: 80%;
-            height: 60%;
+            height: 70%;
             border: 15px solid #1a1a2e;
             border-radius: 10px;
             background: rgba(0, 10, 30, 0.7);
@@ -80,46 +80,6 @@
             top: 30%;
             left: 20%;
             box-shadow: 0 0 20px rgba(100, 150, 255, 0.5);
-        }
-
-        .control-panel {
-            position: absolute;
-            bottom: 5%;
-            left: 5%;
-            width: 90%;
-            height: 20%;
-            background: rgba(10, 20, 40, 0.8);
-            border: 2px solid #0ff;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 15px;
-        }
-
-        .control {
-            width: 70px;
-            height: 70px;
-            background: rgba(20, 30, 50, 0.9);
-            border: 2px solid #0ff;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
-            position: relative;
-        }
-
-        .control::after {
-            content: '';
-            position: absolute;
-            width: 50%;
-            height: 50%;
-            background: #0ff;
-            border-radius: 50%;
-            opacity: 0.7;
-            animation: pulse 2s infinite;
         }
 
         .hud {
@@ -169,6 +129,82 @@
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
         }
 
+        .menu-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #0ff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            max-width: 600px;
+            width: 80%;
+        }
+
+        h1 {
+            color: #0ff;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+            letter-spacing: 1px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .menu-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 15px;
+            background: transparent;
+            border: 2px solid #0ff;
+            color: #0ff;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9em;
+            height: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
+            transform: translateY(-2px);
+        }
+
+        .menu-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.4), transparent);
+            transition: 0.5s;
+        }
+
+        .menu-btn:hover::before {
+            left: 100%;
+        }
+
+        .menu-btn span {
+            margin-right: 8px;
+            font-size: 1.2em;
+        }
+
         @keyframes space-move {
             0% { transform: translateX(0) translateY(0); }
             100% { transform: translateX(-100px) translateY(-50px); }
@@ -186,51 +222,20 @@
             100% { top: 100%; opacity: 0; }
         }
 
-        .content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 10;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 30px;
-            border-radius: 10px;
-            border: 1px solid #0ff;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-            max-width: 600px;
-        }
+        /* Responsive */
+        @media (max-width: 768px) {
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
 
-        h1 {
-            color: #0ff;
-            margin-bottom: 20px;
-            font-size: 2.5em;
-            text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
-        }
+            h1 {
+                font-size: 1.8em;
+            }
 
-        p {
-            color: #aaf;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 10px 25px;
-            background: transparent;
-            border: 2px solid #0ff;
-            color: #0ff;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: all 0.3s;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .btn:hover {
-            background: rgba(0, 255, 255, 0.2);
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
+            .menu-btn {
+                font-size: 0.8em;
+                height: 50px;
+            }
         }
     </style>
 </head>
@@ -254,24 +259,36 @@
         <div class="scan-line"></div>
     </div>
 
-    <div class="control-panel">
-        <div class="control"></div>
-        <div class="control"></div>
-        <div class="control"></div>
-        <div class="control"></div>
-    </div>
-
     <div class="data-display">
-        VELOCIDAD: 0.7C<br>
-        COMBUSTIBLE: 87%<br>
-        SISTEMAS: NOMINAL<br>
-        DESTINO: ALFA CENTAURI
+        SISTEMA: OPERATIVO<br>
+        JUEGOS: DISPONIBLES<br>
+        USUARIO: PILOTO<br>
+        ESTADO: LISTO
     </div>
 
-    <div class="content">
-        <h1>BIENVENIDO A BORDO</h1>
-        <p>Estación espacial de control principal. Todos los sistemas operativos funcionando correctamente. Preparados para el despegue.</p>
-        <a href="menu.html" class="btn">Iniciar Secuencia</a>
+    <div class="menu-container">
+        <h1>🌌 PANEL DE CONTROL PRINCIPAL</h1>
+
+        <div class="menu-grid">
+            <a class="menu-btn" href="index.html">
+                <span>🚀</span> INICIO
+            </a>
+            <a class="menu-btn" href="juego1.html">
+                <span>🎭</span> MÍMICAS ESPACIALES
+            </a>
+            <a class="menu-btn" href="juego2.html">
+                <span>🧩</span> ROMPECABEZAS
+            </a>
+            <a class="menu-btn" href="juego3.html">
+                <span>🃏</span> ENCUENTRA LAS PAREJAS
+            </a>
+            <a class="menu-btn" href="juego4.html">
+                <span>❓</span> PREGUNTAS DEL SISTEMA SOLAR
+            </a>
+            <a class="menu-btn" href="solar.html">
+                <span>🪐</span> SISTEMA SOLAR
+            </a>
+        </div>
     </div>
 </div>
 
